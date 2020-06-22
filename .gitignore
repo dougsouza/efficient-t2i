@@ -107,3 +107,4 @@ datasets/
 downloads/
 .vscode/
 *DS_Store
+evaluation/inception_score/inception_finetuned_models/

@@ -72,8 +72,7 @@ def main(rank, args):
     initializer_fn = get_initializer(config.weight_init)
 
     netD = get_dmodel(d_model=config.d_model,
-                      ndf=config.ndf,
-                      conditioning=config.conditioning)
+                      ndf=config.ndf)
     netD.apply(initializer_fn)
     if config.local_rank == 0:
         print(netD)
@@ -83,9 +82,7 @@ def main(rank, args):
         'g_model': config.g_model,
         'ngf': config.ngf,
         'z_dim': config.z_dim,
-        'norm': config.g_norm,
-        'use_attention': config.attention,
-        'cond_aug': config.cond_aug
+        'norm': config.g_norm
     }
     netG = get_gmodel(**netG_params)
     netG.apply(initializer_fn)

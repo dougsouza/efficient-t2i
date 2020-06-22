@@ -209,7 +209,7 @@ class Discriminator(nn.Module):
         self.linear_out = self.weight_norm_fn(nn.Linear(ndf * 16, 1))
 
 
-    def forward(self, x, embedding, word_embs, mask=None):
+    def forward(self, x, embedding):
         h = x
         for m in self.main:
             h = m(h)

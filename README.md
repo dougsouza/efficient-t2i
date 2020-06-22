@@ -8,6 +8,7 @@ Official implementation of the paper  [Efficient Neural Architecture for Text-to
 
 * Python 3.7+
 * Pytorch 1.2+
+* Tensorflow 1.14 (`pip install tensorflow-gpu==1.14`) (used to compute IS and FID)
 * gdown (`pip install gdown`) (used to download datasets and meta data from Google Drive)
 * easydict (`pip install easydict`)
 * tensorboardX (`pip install tensorboardx`)

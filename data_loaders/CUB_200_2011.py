@@ -19,6 +19,7 @@ class CUB200Dataset(data.Dataset):
                 transform=None,
                 target_transform=None,
                 split='train',
+                return_captions=False,
                 return_fnames=False,
                 interp_sentences=False,
                 return_embedding_ix=None):
@@ -27,6 +28,7 @@ class CUB200Dataset(data.Dataset):
         self.transform = transform
         self.target_transform = target_transform
         self.split = split
+        self.return_captions = return_captions
         self.return_fnames = return_fnames
         self.interp_sentences = interp_sentences
         self.__dataset_path = self.data_path / self.split

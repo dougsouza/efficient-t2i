@@ -1,6 +1,6 @@
 # ijcnn exps
-name='TARGAN_96[ICJNN.exp2][AttnG.NOInterp.ttur]'
-ngpu=3
+name='EfficientGAN_96[ICJNN.exp1][Interp.ttur]'
+ngpu=1
 dataset='CUB'
 
 python -m torch.distributed.launch \
@@ -25,5 +25,4 @@ python -m torch.distributed.launch \
     --log_step=10 \
     --save_sample_step=200 \
     --prior=normal \
-    --conditioning=projection \
     --z_dim=128 

@@ -35,33 +35,17 @@ def read_args():
     return parser.parse_args()
 
 
-def default_padding(word_embs):
-    max_length = max([wb.shape[0] for wb in word_embs])
-    targets = torch.zeros(len(word_embs), max_length,
-                           word_embs[0].shape[1], dtype=torch.float32)
-
-    for i, wb in enumerate(word_embs):
-        if isinstance(wb, np.ndarray):
-            wb = torch.tensor(wb)
-        end = wb.shape[0]
-        targets[i, :end, :] = wb
-    return targets
-
-
 
 def test_collate(batch):
     imgs = torch.cat([img[0].unsqueeze(0) for img in batch], dim=0)
     sent = [sent[1] for sent in batch]
-    word_embs = [word_embs[2] for word_embs in batch]
-    caps = [caps[3] for caps in batch]
-    return imgs, sent, word_embs, caps
+    return imgs, sent
 
 
 def collate_fn(batch):
     # imgs = torch.cat([img[0].unsqueeze(0) for img in batch], dim=0)
     sent = torch.cat([sent[1].unsqueeze(0) for sent in batch], dim=0)
-    word_embs = default_padding([word_embs[2] for word_embs in batch])
-    return sent, word_embs
+    return sent
 
 
 
@@ -82,11 +66,10 @@ def warmup_generator(netG, sampler_fn, z_dim, train_loader, device, n_forwards=1
         p.requires_grad = False
     print('warming up G')
     for _ in tqdm.trange(n_forwards):
-        sent_emb, word_emb = next(train_iter)
-        sent_emb, word_emb = sent_emb.to(device), word_emb.to(device)
-        # word_emb = torch.cat([word_emb, sent_emb.unsqueeze(1).repeat(1, word_emb.shape[1], 1)], dim=2)
+        sent_emb = next(train_iter)
+        sent_emb = sent_emb.to(device)
         z = sampler_fn(sent_emb.size(0), z_dim)
-        _ = netG(z, sent_emb, word_emb)
+        _ = netG(z, sent_emb)
     del train_iter
     return netG.eval()
 
@@ -110,48 +93,20 @@ def dump_test_data(data_loader,
         fidx_dset = h5file.create_dataset('fidx', shape=(total_imgs,),
                                             dtype=np.int32)
         print('exporting imgs...')
-        for _, batch_embs, batch_word_embs, batch_caps in tqdm.tqdm(data_loader):
-            for embs, word_embs, caps in zip(batch_embs, batch_word_embs, batch_caps):
-                emb = torch.tensor(embs, dtype=torch.float32)
+        for _, batch_embs in tqdm.tqdm(data_loader):
+            for embs in batch_embs:
+                emb = torch.tensor(embs, dtype=torch.float32).squeeze(0)
                 batch_size = emb.size(0)
-                for i in range(len(word_embs)):
-                    we = word_embs[i]
-                    if we.ndim == 1:
-                        we = we[None, ...]
-                    if we.shape[1] > data_loader.dataset.WORDS_NUM:
-                        word_embs[i] = we[:data_loader.dataset.WORDS_NUM, ...]
-                word_emb = default_padding(word_embs)
-                #word_emb = torch.cat([word_emb, emb.unsqueeze(1).repeat(1, word_emb.shape[1], 1)], dim=2)
-                caps = torch.cat([torch.tensor(c, dtype=torch.int64) for c in caps], dim=0)
-                mask = caps == 0
-                num_words = word_emb.size(1)
-                if mask.size(1) > num_words:
-                    mask = mask[:, :num_words]
+
 
                 z = sampler_fn(batch_size, z_dim)
-                #print('---', z.shape, word_embs[0].shape)#, embs.shape, word_embs.shape)
+
                 with torch.no_grad():
-                    imgs = netG(z, emb.to(device),
-                                word_emb.to(device), None)
+                    imgs = netG(z, emb.to(device))
                 imgs_np = imgs.mul(0.5).add(0.5).clamp(0, 1).mul(255) \
                     .clamp_(0, 255).byte().permute(0, 2, 3, 1).cpu().numpy()
                 samples_dset[start_idx:(start_idx + batch_size)] = imgs_np
-                # fidx_dset[start_idx:(start_idx + batch_size)] = fidx
                 start_idx += batch_size
-            # for _ in range(test_sample_num):
-            #     ridx = random.randint(0, len(emb)-1)
-            #     batch_size = emb.size(0)
-            #     # ridx = torch.tensor(np.random.choice(10, size=batch_size))
-            #     # print('rdx', ridx.size())
-            #     z = sampler_fn(batch_size, z_dim)
-            #     with torch.no_grad():
-            #         input_emb, wembs = emb.to(device), word_embs.to(device)
-            #         imgs = netG(z, input_emb, wembs)
-            #     imgs_np = imgs.mul(0.5).add(0.5).clamp(0, 1).mul(255) \
-            #         .clamp_(0, 255).byte().permute(0, 2, 3, 1).cpu().numpy()
-            #     samples_dset[start_idx:(start_idx + batch_size)] = imgs_np
-            #     # fidx_dset[start_idx:(start_idx + batch_size)] = fidx
-            #     start_idx += batch_size
         print('done')
 
 
@@ -194,7 +149,7 @@ def main(args):
         params = yaml.load(f)
         config = edict(params)
     
-    device = torch.device('cuda:1')
+    device = torch.device('cuda:0')
 
     train_dset = get_loader(config.dataset, split='train', transform=None,
             target_transform=lambda x: torch.tensor(x, dtype=torch.float32),

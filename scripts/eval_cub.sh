@@ -1,5 +1,5 @@
 python eval.py is \
-     --model_folder="logs/TARGAN_96[ICJNN.exp1][AttnG.Interp.ttur]_CUB_0114_1725" \
+     --model_folder="logs/EfficientGAN_96[ICJNN.exp1][AttnG.Interp.ttur]_CUB_0114_1725" \
      --epoch=all \
      --batch_size=64
 
