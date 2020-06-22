@@ -24,14 +24,26 @@ To download Oxford-102:
 
 ## Training
 
+To train:
 
+`./scripts/train_birds.sh`
+
+Please loot at the script for setting training parameters.
 
 
 ## Evaluation
 
+To eval:
+
+`./scripts/eval_cub.sh`
+
+Please loot at the script for setting evaluation parameters.
 
 ## Pretrained Models
-Soon
+
+We already uploaded the pretrained model for Birds, downloads using the provided script:
+
+`./scripts/download_pretrained_birds_model.sh`
 
 
 ## Citation
