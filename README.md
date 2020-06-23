@@ -28,7 +28,7 @@ To train:
 
 `./scripts/train_birds.sh`
 
-Please loot at the script for setting training parameters.
+Please look at the script for setting training parameters.
 
 After launching a training job, follow it on tensorboard. Go to the project folder then:
 
@@ -40,13 +40,19 @@ To eval:
 
 `./scripts/eval_cub.sh`
 
-Please loot at the script for setting evaluation parameters.
+Please look at the script for setting evaluation parameters.
 
 ## Pretrained Models
 
-We already uploaded the pretrained model for Birds, downloads using the provided script:
+We already uploaded the pretrained model for Birds, download it using the provided script:
 
 `./scripts/download_pretrained_birds_model.sh`
+
+## Playground
+
+We also include a jupyter notebook with examples of how generate images. Just go to the project fodler and and launch:
+
+`jupyter notebook`
 
 
 ## Citation

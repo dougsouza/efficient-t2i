@@ -31,6 +31,7 @@ class CUB200Dataset(data.Dataset):
         self.return_captions = return_captions
         self.return_fnames = return_fnames
         self.interp_sentences = interp_sentences
+        self.return_embedding_ix = return_embedding_ix
         self.__dataset_path = self.data_path / self.split
 
 
@@ -51,6 +52,8 @@ class CUB200Dataset(data.Dataset):
 
         if self.split == 'train':
             rdix = random.randint(0, 9)
+            if self.return_embedding_ix is not None:
+                rdix = self.return_embedding_ix
             if self.interp_sentences:
                 probs = np_softmax(np.random.uniform(0, 10, (len(sent_emb), 1)))
                 sent_emb = np.sum(sent_emb * probs, axis=0)
