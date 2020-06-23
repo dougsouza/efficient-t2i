@@ -50,9 +50,9 @@ We already uploaded the pretrained model for Birds, download it using the provid
 
 ## Playground
 
-We also include a jupyter notebook with examples of how generate images. Just go to the project fodler and and launch:
+We also include a jupyter notebook with examples on how to generate images. Just go to the project folder and launch:
 
-`jupyter notebook`
+`$jupyter notebook`
 
 
 ## Citation
