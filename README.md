@@ -30,6 +30,9 @@ To train:
 
 Please loot at the script for setting training parameters.
 
+After launching a training job, follow it on tensorboard. Go to the project folder then:
+
+`tensorboard --logdir=logs/`
 
 ## Evaluation
 
