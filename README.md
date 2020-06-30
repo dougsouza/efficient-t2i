@@ -59,7 +59,7 @@ We also include a jupyter notebook with examples on how to generate images. Just
 
 If you find this work useful, please consider citing:
 
-```tex
+```bibtex
 @article{souza2020efficient,
   title={Efficient Neural Architecture for Text-to-Image Synthesis},
   author={Souza, Douglas M and Wehrmann, J{\^o}natas and Ruiz, Duncan D},
