@@ -1,10 +1,12 @@
+import json
 from pathlib import Path
-import torch.utils.data as data
-from PIL import Image
-import numpy as np
 import random
-import pickle
+
+import h5py
+import numpy as np
+from PIL import Image
 import torch
+import torch.utils.data as data
 
 
 def np_softmax(x, axis=0):
@@ -14,15 +16,17 @@ def np_softmax(x, axis=0):
 
 
 class CUB200Dataset(data.Dataset):
-    def __init__(self,
-                data_path=Path('datasets/CUB_200_2011/birds'),
-                transform=None,
-                target_transform=None,
-                split='train',
-                return_captions=False,
-                return_fnames=False,
-                interp_sentences=False,
-                return_embedding_ix=None):
+    def __init__(
+        self,
+        data_path=Path('datasets/CUB'),
+        transform=None,
+        target_transform=None,
+        split='train',
+        return_captions=False,
+        return_fnames=False,
+        interp_sentences=False,
+        return_embedding_ix=None,
+    ):
         super(CUB200Dataset, self).__init__()
         self.data_path = Path(data_path)
         self.transform = transform
@@ -33,18 +37,13 @@ class CUB200Dataset(data.Dataset):
         self.interp_sentences = interp_sentences
         self.return_embedding_ix = return_embedding_ix
         self.__dataset_path = self.data_path / self.split
-
+        
+        with open(self.__dataset_path / 'en_data.json') as f:
+            self.text_data = json.load(f)
 
         self.embeddings = np.load(self.__dataset_path / 'attn_embeddings.npy')
-        
-        with open(self.__dataset_path / 'filenames.pickle', 'rb') as f:
-            self.fnames = pickle.load(f, encoding='latin1')
 
-        with open(self.__dataset_path / '304images.pickle', 'rb') as f:
-            self.images = pickle.load(f, encoding='latin1')
-    
-        with open(self.__dataset_path / 'class_info.pickle', 'rb') as f:
-            self.class_info = pickle.load(f, encoding='latin1')
+        self.images = h5py.File(self.__dataset_path / '304images.h5', 'r')['images']
 
 
     def __getitem__(self, ix):
@@ -72,12 +71,9 @@ class CUB200Dataset(data.Dataset):
 
         output = [img, sent_emb]
         if self.return_captions:
-            with open(self.data_path / 'text_c10' /  \
-                        '{}.txt'.format(self.fnames[ix]), 'r') as f:
-                text_captions = f.readlines()
-            output += [text_captions]
+            output.append(self.text_data[ix]['captions'])
         if self.return_fnames:
-            output += [self.fnames[ix], ix]
+            output += [self.text_data[ix]['filename'], ix]
 
         return tuple(output)
 
