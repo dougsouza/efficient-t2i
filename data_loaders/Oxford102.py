@@ -1,10 +1,12 @@
+import json
 from pathlib import Path
-import torch.utils.data as data
-from PIL import Image
-import numpy as np
 import random
-import pickle
+
+import h5py
+import numpy as np
+from PIL import Image
 import torch
+import torch.utils.data as data
 
 
 def np_softmax(x, axis=0):
@@ -14,14 +16,17 @@ def np_softmax(x, axis=0):
 
 
 class Oxford102Dataset(data.Dataset):
-    def __init__(self,
-                data_path=Path('datasets/Oxford102/flowers'),
-                transform=None,
-                target_transform=None,
-                split='train',
-                return_captions=False,
-                return_fnames=False,
-                interp_sentences=False):
+    def __init__(
+        self,
+        data_path=Path('datasets/Oxford102'),
+        transform=None,
+        target_transform=None,
+        split='train',
+        return_captions=False,
+        return_fnames=False,
+        interp_sentences=False,
+        return_embedding_ix=None,
+    ):
         super(Oxford102Dataset, self).__init__()
         self.data_path = Path(data_path)
         self.transform = transform
@@ -30,33 +35,34 @@ class Oxford102Dataset(data.Dataset):
         self.return_captions = return_captions
         self.return_fnames = return_fnames
         self.interp_sentences = interp_sentences
+        self.return_embedding_ix = return_embedding_ix
         self.__dataset_path = self.data_path / self.split
 
         
-        with open(self.__dataset_path / 'attn_embeddings.pickle', 'rb') as f:
-            self.embeddings = pickle.load(f, encoding='latin1')
+        with open(self.__dataset_path / 'en_data.json') as f:
+            self.text_data = json.load(f)
 
-        with open(self.__dataset_path / 'filenames.pickle', 'rb') as f:
-            self.fnames = pickle.load(f, encoding='latin1')
+        self.embeddings = np.load(self.__dataset_path / 'attn_embeddings.npy')
 
-        with open(self.__dataset_path / '304images.pickle', 'rb') as f:
-            self.images = pickle.load(f, encoding='latin1')
-
+        self.images = h5py.File(self.__dataset_path / '304images.h5', 'r')['images']
 
 
     def __getitem__(self, ix):
         sent_emb = self.embeddings[ix]
 
         if self.split == 'train':
-            rdix = random.randint(0, len(sent_emb))
+            rdix = random.randint(0, 9)
+            if self.return_embedding_ix is not None:
+                rdix = self.return_embedding_ix
             if self.interp_sentences:
-                probs = np_softmax(np.random.uniform(0, len(sent_emb), (len(sent_emb), 1)))
+                probs = np_softmax(np.random.uniform(0, 10, (len(sent_emb), 1)))
                 sent_emb = np.sum(sent_emb * probs, axis=0)
             else:
                 sent_emb = sent_emb[rdix]
         else: # return all sentence embeddings
             sent_emb = sent_emb[None, ...] # unszqueeze
         
+
         if self.target_transform is not None:
             sent_emb = self.target_transform(sent_emb)
 
@@ -66,15 +72,11 @@ class Oxford102Dataset(data.Dataset):
 
         output = [img, sent_emb]
         if self.return_captions:
-            with open(self.data_path / 'text' /  \
-                        '{}.txt'.format(self.fnames[ix]), 'r') as f:
-                text_captions = f.readlines()
-            output += [text_captions]
+            output.append(self.text_data[ix]['captions'])
         if self.return_fnames:
-            output += [self.fnames[ix], ix]
+            output += [self.text_data[ix]['filename'], ix]
 
         return tuple(output)
-
 
     def __len__(self):
         return len(self.images)
